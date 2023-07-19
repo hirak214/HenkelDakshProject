@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:henkel_daksh_project/app_drawer/user_management/tsc_form_screen.dart';
+
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -43,8 +45,10 @@ class _TcsScreenState extends State<TcsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle "Add User" button tap
-          _showAddUserDialog();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TscFormScreen()),
+          );
         },
         child: const Icon(Icons.add),
       ),
