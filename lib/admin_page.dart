@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:henkel_daksh_project/app_drawer/upload_screen.dart';
-import 'package:henkel_daksh_project/app_drawer/user_managment/tsc_screen.dart';
+import 'package:henkel_daksh_project/app_drawer/user_management/tsc_screen.dart';
+import 'package:henkel_daksh_project/app_drawer/user_management/cm_screen.dart';
+import 'package:henkel_daksh_project/app_drawer/user_management/ca_screen.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -34,9 +36,9 @@ class _AdminPageState extends State<AdminPage> {
     if (_selectedOption == 'TCS') {
       view = TcsScreen();
     } else if (_selectedOption == 'Customer Manager') {
-      // Add code for Customer Manager screen
-    } else if (_selectedOption == 'Applicatior') {
-      // Add code for Applicatior screen
+      view = CustomerManagerScreen();
+    } else if (_selectedOption == 'Applicator') {
+      view = CustomerApplicatorScreen();
     }
 
     return Scaffold(
@@ -83,7 +85,7 @@ class _AdminPageState extends State<AdminPage> {
                 items: const <String>[
                   'TCS',
                   'Customer Manager',
-                  'Applicatior',
+                  'Applicator',
                 ].map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
