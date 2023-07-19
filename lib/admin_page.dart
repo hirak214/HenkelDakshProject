@@ -94,13 +94,13 @@ class _AdminPageState extends State<AdminPage> {
                 }).toList(),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.pageview),
-              title: const Text('User List'),
-              onTap: () {
-                // Handle User List tap
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.pageview),
+            //   title: const Text('User List'),
+            //   onTap: () {
+            //     // Handle User List tap
+            //   },
+            // ),
             ListTile(
               leading: const Icon(Icons.pageview),
               title: const Text('Upload Study Material'),

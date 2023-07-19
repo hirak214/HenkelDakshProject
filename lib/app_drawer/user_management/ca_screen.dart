@@ -7,11 +7,22 @@ class CustomerApplicatorScreen extends StatefulWidget {
 }
 
 class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
-  List<String> entries = [
-    'Applicator 1',
-    'Applicator 2',
-    'Applicator 3',
-    // Add more entries as needed
+  List<Map<String, String>> applicators = [
+    {
+      'First Name': 'Hirak',
+      'Last Name': 'Desai',
+      'Email ID': 'hirak.d@henkel.com',
+      'Customer Name': 'ABC Company',
+      'Status': 'Active',
+    },
+    {
+      'First Name': 'Yashvi',
+      'Last Name': 'Agrawal',
+      'Email ID': 'yashvi.a@henkel.com',
+      'Customer Name': 'XYZ Corporation',
+      'Status': 'Inactive',
+    },
+    // Add more applicator data as needed
   ];
 
   @override
@@ -25,19 +36,15 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Customer Applicator Users',
+              'Customer Applicator User List',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: entries.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(entries[index]),
-                  // Add any additional fields or widgets to display applicator information
-                );
-              },
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: _buildTableColumns(),
+              rows: _buildTableRows(),
             ),
           ),
         ],
@@ -49,6 +56,37 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
         child: Icon(Icons.add),
       ),
     );
+  }
+
+  List<DataColumn> _buildTableColumns() {
+    return [
+      DataColumn(label: Text('First Name')),
+      DataColumn(label: Text('Last Name')),
+      DataColumn(label: Text('Email ID')),
+      DataColumn(label: Text('Customer Name')),
+      DataColumn(label: Text('Status')),
+      DataColumn(label: Text('Action')),
+    ];
+  }
+
+  List<DataRow> _buildTableRows() {
+    return applicators.map((applicator) {
+      return DataRow(
+        cells: [
+          DataCell(Text(applicator['First Name'] ?? '')),
+          DataCell(Text(applicator['Last Name'] ?? '')),
+          DataCell(Text(applicator['Email ID'] ?? '')),
+          DataCell(Text(applicator['Customer Name'] ?? '')),
+          DataCell(Text(applicator['Status'] ?? '')),
+          DataCell(IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              // TODO: Implement edit action
+            },
+          )),
+        ],
+      );
+    }).toList();
   }
 
   void _showAddApplicatorDialog() {
@@ -73,10 +111,12 @@ class ApplicatorForm extends StatefulWidget {
 
 class _ApplicatorFormState extends State<ApplicatorForm> {
   final _formKey = GlobalKey<FormState>();
-  String? _firstName;
-  String? _lastName;
-  String? _email;
-  String? _customerName;
+  Map<String, dynamic> _applicatorData = {
+    'First Name': '',
+    'Last Name': '',
+    'Email ID': '',
+    'Customer Name': '',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -97,78 +137,40 @@ class _ApplicatorFormState extends State<ApplicatorForm> {
         Form(
           key: _formKey,
           child: Column(
-            children: [
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'First Name',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your first name';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _firstName = value;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Last Name',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your last name';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _lastName = value;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Email ID',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email ID';
-                  }
-                  if (!value.endsWith('@henkel.com')) {
-                    return 'Email ID must end with @henkel.com';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _email = value;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Customer Name',
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the customer name';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _customerName = value;
-                },
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  _submitForm();
-                },
-                child: Text('Submit'),
-              ),
-            ],
+            children: _buildFormFields(),
           ),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            _submitForm();
+          },
+          child: Text('Submit'),
         ),
       ],
     );
+  }
+
+  List<Widget> _buildFormFields() {
+    return _applicatorData.keys.map((key) {
+      return TextFormField(
+        decoration: InputDecoration(
+          labelText: key,
+        ),
+        validator: (value) {
+          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
+            return 'Please enter a valid email ID ending with @henkel.com';
+          }
+          if (value == null || value.isEmpty) {
+            return 'Please enter the $key';
+          }
+          return null;
+        },
+        onSaved: (value) {
+          _applicatorData[key] = value ?? '';
+        },
+      );
+    }).toList();
   }
 
   void _submitForm() {
@@ -185,3 +187,4 @@ class _ApplicatorFormState extends State<ApplicatorForm> {
     }
   }
 }
+

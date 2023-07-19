@@ -6,11 +6,20 @@ class CustomerManagerScreen extends StatefulWidget {
 }
 
 class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
-  List<String> entries = [
-    'Customer 1',
-    'Customer 2',
-    'Customer 3',
-    // Add more entries as needed
+  List<Map<String, String>> customers = [
+    {
+      'First Name': 'Hirak',
+      'Last Name': 'Desai',
+      'Email ID': 'hirak.d@henkel.com',
+      'Status': 'Active',
+    },
+    {
+      'First Name': 'Yashvi',
+      'Last Name': 'Agrawal',
+      'Email ID': 'yashvi.a@henkel.com',
+      'Status': 'Inactive',
+    },
+    // Add more customer data as needed
   ];
 
   @override
@@ -24,19 +33,15 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Customer Manager Users',
+              'Customer Manager User List',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: entries.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(entries[index]),
-                  // Add any additional fields or widgets to display customer information
-                );
-              },
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: _buildTableColumns(),
+              rows: _buildTableRows(),
             ),
           ),
         ],
@@ -50,13 +55,42 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
     );
   }
 
+  List<DataColumn> _buildTableColumns() {
+    return [
+      DataColumn(label: Text('First Name')),
+      DataColumn(label: Text('Last Name')),
+      DataColumn(label: Text('Email ID')),
+      DataColumn(label: Text('Status')),
+      DataColumn(label: Text('Action')),
+    ];
+  }
+
+  List<DataRow> _buildTableRows() {
+    return customers.map((customer) {
+      return DataRow(
+        cells: [
+          DataCell(Text(customer['First Name'] ?? '')),
+          DataCell(Text(customer['Last Name'] ?? '')),
+          DataCell(Text(customer['Email ID'] ?? '')),
+          DataCell(Text(customer['Status'] ?? '')),
+          DataCell(IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              // TODO: Implement edit action
+            },
+          )),
+        ],
+      );
+    }).toList();
+  }
+
   void _showAddCustomerDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add Customer'),
-          content: SingleChildScrollView(
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: CustomerForm(),
           ),
         );
@@ -72,126 +106,68 @@ class CustomerForm extends StatefulWidget {
 
 class _CustomerFormState extends State<CustomerForm> {
   final _formKey = GlobalKey<FormState>();
-  String? _firstName;
-  String? _lastName;
-  String? _email;
-  String? _customerId;
-  String? _customerDepartment;
-  String? _customerAddress;
+  Map<String, dynamic> _customerData = {
+    'First Name': '',
+    'Last Name': '',
+    'Email ID': '',
+    'Customer ID': '',
+    'Customer Address': '',
+    'Department': '',
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'First Name',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your first name';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _firstName = value;
-            },
+          ],
+        ),
+        Form(
+          key: _formKey,
+          child: Column(
+            children: _buildFormFields(),
           ),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Last Name',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your last name';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _lastName = value;
-            },
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Email ID',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email ID';
-              }
-              if (!value.endsWith('@henkel.com')) {
-                return 'Email ID must end with @henkel.com';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _email = value;
-            },
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Customer ID',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the customer ID';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _customerId = value;
-            },
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Customer Department',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the customer department';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _customerDepartment = value;
-            },
-          ),
-          TextFormField(
-            decoration: InputDecoration(
-              labelText: 'Customer Address',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the customer address';
-              }
-              return null;
-            },
-            onSaved: (value) {
-              _customerAddress = value;
-            },
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Close'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _submitForm();
-                },
-                child: Text('Submit'),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            _submitForm();
+          },
+          child: Text('Submit'),
+        ),
+      ],
     );
+  }
+
+  List<Widget> _buildFormFields() {
+    return _customerData.keys.map((key) {
+      return TextFormField(
+        decoration: InputDecoration(
+          labelText: key,
+        ),
+        validator: (value) {
+          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
+            return 'Please enter a valid email ID ending with @henkel.com';
+          }
+          if (value == null || value.isEmpty) {
+            return 'Please enter the $key';
+          }
+          return null;
+        },
+        onSaved: (value) {
+          _customerData[key] = value ?? '';
+        },
+      );
+    }).toList();
   }
 
   void _submitForm() {
@@ -208,3 +184,4 @@ class _CustomerFormState extends State<CustomerForm> {
     }
   }
 }
+

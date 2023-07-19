@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:henkel_daksh_project/app_drawer/user_management/tsc_form_screen.dart';
-
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -8,86 +6,193 @@ class TcsScreen extends StatefulWidget {
 }
 
 class _TcsScreenState extends State<TcsScreen> {
-  List<String> entries = [
-    'Entry 1',
-    'Entry 2',
-    'Entry 3',
-    // Add more entries as needed
+  List<Map<String, dynamic>> users = [
+    {
+      'First Name': 'Hirak',
+      'Last Name': 'Desai',
+      'Email ID': 'hirak.d@henkel.com',
+      'Status': 'Active',
+    },
+    {
+      'First Name': 'Yashvi',
+      'Last Name': 'Agrawal',
+      'Email ID': 'yashvi.a@henkel.com',
+      'Status': 'Inactive',
+    },
+    // Add more user data as needed
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TCS'),
+        title: Text('TCS'),
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'TCS Users',
+              'TCS User List',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: entries.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(entries[index]),
-                  // Add any additional fields or widgets to display user information
-                );
-              },
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: _buildTableColumns(),
+              rows: _buildTableRows(),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TscFormScreen()),
-          );
+          _showAddUserDialog();
         },
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
+  }
+
+  List<DataColumn> _buildTableColumns() {
+    return [
+      DataColumn(label: Text('First Name')),
+      DataColumn(label: Text('Last Name')),
+      DataColumn(label: Text('Email ID')),
+      DataColumn(label: Text('Status')),
+      DataColumn(label: Text('Action')),
+    ];
+  }
+
+  List<DataRow> _buildTableRows() {
+    return users.map((user) {
+      return DataRow(
+        cells: [
+          DataCell(Text(user['First Name'] ?? '')),
+          DataCell(Text(user['Last Name'] ?? '')),
+          DataCell(Text(user['Email ID'] ?? '')),
+          DataCell(Text(user['Status'] ?? '')),
+          DataCell(IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              // TODO: Implement edit action
+            },
+          )),
+        ],
+      );
+    }).toList();
   }
 
   void _showAddUserDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add User'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: [
-                Text('Add user form goes here...'),
-                // Add form fields to capture user details
-              ],
-            ),
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: UserForm(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Handle "Cancel" button tap
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Handle "Save" button tap
-                // Add logic to save the user details to Firebase
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
         );
       },
     );
   }
 }
+
+class UserForm extends StatefulWidget {
+  @override
+  _UserFormState createState() => _UserFormState();
+}
+
+class _UserFormState extends State<UserForm> {
+  final _formKey = GlobalKey<FormState>();
+  Map<String, dynamic> _userData = {
+    'First Name': '',
+    'Last Name': '',
+    'Email ID': '',
+    'Region': '',
+    'Reporting Manager Email ID': '',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        Form(
+          key: _formKey,
+          child: Column(
+            children: _buildFormFields(),
+          ),
+        ),
+        SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            _submitForm();
+          },
+          child: Text('Submit'),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildFormFields() {
+    return _userData.keys.map((key) {
+      if (key == 'Region' || key == 'Reporting Manager Email ID') {
+        return TextFormField(
+          decoration: InputDecoration(
+            labelText: key,
+          ),
+          onSaved: (value) {
+            _userData[key] = value ?? '';
+          },
+        );
+      }
+      return TextFormField(
+        decoration: InputDecoration(
+          labelText: key,
+        ),
+        validator: (value) {
+          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
+            return 'Please enter a valid email ID ending with @henkel.com';
+          }
+          if (key != 'Region' && key != 'Reporting Manager Email ID') {
+            if (value == null || value.isEmpty) {
+              return 'Please enter the $key';
+            }
+          }
+          return null;
+        },
+        onSaved: (value) {
+          _userData[key] = value ?? '';
+        },
+      );
+    }).toList();
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+
+      // TODO: Implement code to upload form data to Firebase
+
+      _formKey.currentState?.reset();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Form submitted successfully')),
+      );
+    }
+  }
+}
+
