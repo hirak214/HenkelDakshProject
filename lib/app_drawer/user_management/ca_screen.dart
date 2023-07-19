@@ -18,12 +18,12 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer Applicator'),
+        title: Text('Customer Applicator'),
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
               'Customer Applicator Users',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -44,10 +44,9 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle "Add Applicator" button tap
           _showAddApplicatorDialog();
         },
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -56,35 +55,133 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Applicator'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: [
-                Text('Add applicator form goes here...'),
-                // Add form fields to capture applicator details
-              ],
-            ),
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ApplicatorForm(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Handle "Cancel" button tap
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Handle "Save" button tap
-                // Add logic to save the applicator details to Firebase
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
-            ),
-          ],
         );
       },
     );
+  }
+}
+
+class ApplicatorForm extends StatefulWidget {
+  @override
+  _ApplicatorFormState createState() => _ApplicatorFormState();
+}
+
+class _ApplicatorFormState extends State<ApplicatorForm> {
+  final _formKey = GlobalKey<FormState>();
+  String? _firstName;
+  String? _lastName;
+  String? _email;
+  String? _customerName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'First Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your first name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _firstName = value;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Last Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your last name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _lastName = value;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Email ID',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email ID';
+                  }
+                  if (!value.endsWith('@henkel.com')) {
+                    return 'Email ID must end with @henkel.com';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _email = value;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Customer Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the customer name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _customerName = value;
+                },
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  _submitForm();
+                },
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
+
+      // TODO: Implement code to upload form data to Firebase
+
+      _formKey.currentState?.reset();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Form submitted successfully')),
+      );
+    }
   }
 }
