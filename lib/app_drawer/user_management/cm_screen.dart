@@ -10,13 +10,13 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
     {
       'First Name': 'Hirak',
       'Last Name': 'Desai',
-      'Email ID': 'hirak.d@henkel.com',
+      'Email ID': 'hirak.d@mail.com',
       'Status': 'Active',
     },
     {
       'First Name': 'Yashvi',
       'Last Name': 'Agrawal',
-      'Email ID': 'yashvi.a@henkel.com',
+      'Email ID': 'yashvi.a@mail.com',
       'Status': 'Inactive',
     },
     // Add more customer data as needed
@@ -30,11 +30,13 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Customer Manager User List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Customer Manager User List',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           SingleChildScrollView(
@@ -73,12 +75,25 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
           DataCell(Text(customer['Last Name'] ?? '')),
           DataCell(Text(customer['Email ID'] ?? '')),
           DataCell(Text(customer['Status'] ?? '')),
-          DataCell(IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Implement edit action
-            },
-          )),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    // TODO: Implement edit action
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.cancel_rounded),
+                  onPressed: () {
+                    // TODO: Implement delete action
+                  },
+                ),
+              ],
+            ),
+          ),
+
         ],
       );
     }).toList();
@@ -155,9 +170,6 @@ class _CustomerFormState extends State<CustomerForm> {
           labelText: key,
         ),
         validator: (value) {
-          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
-            return 'Please enter a valid email ID ending with @henkel.com';
-          }
           if (value == null || value.isEmpty) {
             return 'Please enter the $key';
           }
@@ -184,4 +196,5 @@ class _CustomerFormState extends State<CustomerForm> {
     }
   }
 }
+
 

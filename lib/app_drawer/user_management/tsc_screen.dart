@@ -30,11 +30,13 @@ class _TcsScreenState extends State<TcsScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'TCS User List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'TCS User List',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           SingleChildScrollView(
@@ -73,12 +75,25 @@ class _TcsScreenState extends State<TcsScreen> {
           DataCell(Text(user['Last Name'] ?? '')),
           DataCell(Text(user['Email ID'] ?? '')),
           DataCell(Text(user['Status'] ?? '')),
-          DataCell(IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Implement edit action
-            },
-          )),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    // TODO: Implement edit action
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.cancel_rounded),
+                  onPressed: () {
+                    // TODO: Implement delete action
+                  },
+                ),
+              ],
+            ),
+          ),
+
         ],
       );
     }).toList();
