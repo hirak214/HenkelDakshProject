@@ -1,9 +1,11 @@
+import 'dart:js';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:henkel_daksh_project/app_drawer/upload_screen.dart';
 import 'package:henkel_daksh_project/app_drawer/user_management/tsc_screen.dart';
 import 'package:henkel_daksh_project/app_drawer/user_management/cm_screen.dart';
 import 'package:henkel_daksh_project/app_drawer/user_management/ca_screen.dart';
+import 'package:henkel_daksh_project/login_page.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -43,19 +45,55 @@ class _AdminPageState extends State<AdminPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daksh Admin Panel'),
+        title: Text('Daksh Admin Panel'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Handle settings button tap
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.account_circle,
+              color: Colors.black,
+            ),
+            onSelected: (String result) {
+              if (result == 'Logout') {
+                // Handle logout here
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              } else if (result == 'View Profile') {
+                // Handle view profile here
+              }
             },
-          ),
-          const CircleAvatar(
-            backgroundImage: AssetImage('assets/profile_picture.png'),
-            radius: 20,
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'View Profile',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.account_circle,
+                      color: Colors.black,
+                    ),
+                    SizedBox(width: 8),
+                    Text('View Profile'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'Logout',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout,
+                      color: Colors.black,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
+
       ),
       drawer: Drawer(
         child: ListView(
@@ -119,3 +157,6 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 }
+
+
+

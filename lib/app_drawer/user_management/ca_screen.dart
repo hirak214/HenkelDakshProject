@@ -11,14 +11,14 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
     {
       'First Name': 'Hirak',
       'Last Name': 'Desai',
-      'Email ID': 'hirak.d@henkel.com',
+      'Email ID': 'hirak.d@mail.com',
       'Customer Name': 'ABC Company',
       'Status': 'Active',
     },
     {
       'First Name': 'Yashvi',
       'Last Name': 'Agrawal',
-      'Email ID': 'yashvi.a@henkel.com',
+      'Email ID': 'yashvi.a@mail.com',
       'Customer Name': 'XYZ Corporation',
       'Status': 'Inactive',
     },
@@ -33,11 +33,13 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Customer Applicator User List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Customer Applicator User List',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           SingleChildScrollView(
@@ -78,12 +80,25 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
           DataCell(Text(applicator['Email ID'] ?? '')),
           DataCell(Text(applicator['Customer Name'] ?? '')),
           DataCell(Text(applicator['Status'] ?? '')),
-          DataCell(IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Implement edit action
-            },
-          )),
+          DataCell(
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    // TODO: Implement edit action
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.cancel_rounded),
+                  onPressed: () {
+                    // TODO: Implement delete action
+                  },
+                ),
+              ],
+            ),
+          ),
+
         ],
       );
     }).toList();
@@ -158,9 +173,6 @@ class _ApplicatorFormState extends State<ApplicatorForm> {
           labelText: key,
         ),
         validator: (value) {
-          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
-            return 'Please enter a valid email ID ending with @henkel.com';
-          }
           if (value == null || value.isEmpty) {
             return 'Please enter the $key';
           }
