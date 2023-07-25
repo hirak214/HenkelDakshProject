@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "554547915603",
+    "project_id": "henkeldasksh-adminpanel",
+    "storage_bucket": "henkeldasksh-adminpanel.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:554547915603:android:9914fa0a94f16ecfc78fa6",
+        "android_client_info": {
+          "package_name": "com.example.henkel_daksh_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "554547915603-tsclhl5bgdmjvrmdu0u40olnb01oal2g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDP-EeTO5c0SB7wBQiDWyoPUnhBxcF5lCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "554547915603-tsclhl5bgdmjvrmdu0u40olnb01oal2g.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "554547915603-tbajkjq6r45qcaaj90uikkbp2474paek.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.henkelDakshProject.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
