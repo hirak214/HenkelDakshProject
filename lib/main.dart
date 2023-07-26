@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart'; // Add this import
 import 'package:henkel_daksh_project/admin_page.dart'; // Replace with the correct import path to your AdminPage
 import 'package:henkel_daksh_project/firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:henkel_daksh_project/login_page.dart';
 
 
 void main() async {
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: AdminPage(), // Set the AdminPage as the initial page
+      home: LoginPage(), // Set the AdminPage as the initial page
     );
   }
 }

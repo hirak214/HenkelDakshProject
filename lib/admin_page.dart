@@ -6,6 +6,7 @@ import 'package:henkel_daksh_project/app_drawer/user_management/tsc_screen.dart'
 import 'package:henkel_daksh_project/app_drawer/user_management/cm_screen.dart';
 import 'package:henkel_daksh_project/app_drawer/user_management/ca_screen.dart';
 import 'package:henkel_daksh_project/login_page.dart';
+import 'package:henkel_daksh_project/profile_page.dart';
 
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
@@ -47,11 +48,17 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Daksh Admin Panel'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.account_circle, color: Colors.black),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
+            },
+          ),
           PopupMenuButton<String>(
-            icon: Icon(
-              Icons.account_circle,
-              color: Colors.black,
-            ),
+            icon: Icon(Icons.more_vert, color: Colors.black),
             onSelected: (String result) {
               if (result == 'Logout') {
                 // Handle logout here
@@ -93,7 +100,6 @@ class _AdminPageState extends State<AdminPage> {
             ],
           ),
         ],
-
       ),
       drawer: Drawer(
         child: ListView(
@@ -157,6 +163,3 @@ class _AdminPageState extends State<AdminPage> {
     );
   }
 }
-
-
-

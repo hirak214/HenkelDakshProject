@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:henkel_daksh_project/admin_page.dart'; // Replace with the correct import path to your AdminPage
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,27 +12,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _login() async {
-    try {
-      if (_formKey.currentState?.validate() ?? false) {
-        String email = _emailController.text;
-        String password = _passwordController.text;
-
-        // Call Firebase signInWithEmailAndPassword method
-        UserCredential userCredential =
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-
-        // User login successful, do something
-        print('User logged in: ${userCredential.user?.email}');
-      }
-    } catch (e) {
-      // Handle login errors (e.g., invalid credentials, user not found, etc.)
-      print('Login error: $e');
-    }
-  }
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +57,18 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
               ),
+              if (_errorMessage != null) ...[
+                SizedBox(height: 16),
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ],
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _login, // Call _login function on button press
+                onPressed: () {
+                  _submitForm();
+                },
                 child: Text('Login'),
               ),
             ],
@@ -86,5 +76,44 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Validation successful, proceed with login logic
+      String email = _emailController.text;
+      String password = _passwordController.text;
+
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        // Login successful, navigate to the AdminPage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => AdminPage()),
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          setState(() {
+            _errorMessage = 'Email account does not exist.';
+          });
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            _errorMessage = 'Wrong password entered.';
+          });
+        } else {
+          setState(() {
+            _errorMessage = 'Wrong Credentials, please try again.';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'An error occurred. Please try again later.';
+        });
+      }
+    }
   }
 }
