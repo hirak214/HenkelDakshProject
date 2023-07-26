@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -9,6 +10,28 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login() async {
+    try {
+      if (_formKey.currentState?.validate() ?? false) {
+        String email = _emailController.text;
+        String password = _passwordController.text;
+
+        // Call Firebase signInWithEmailAndPassword method
+        UserCredential userCredential =
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        // User login successful, do something
+        print('User logged in: ${userCredential.user?.email}');
+      }
+    } catch (e) {
+      // Handle login errors (e.g., invalid credentials, user not found, etc.)
+      print('Login error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +78,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () {
-                  _submitForm();
-                },
+                onPressed: _login, // Call _login function on button press
                 child: Text('Login'),
               ),
             ],
@@ -66,20 +87,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
-  void _submitForm() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Validation successful, proceed with login logic
-      String email = _emailController.text;
-      String password = _passwordController.text;
-
-      // TODO: Implement your login logic here
-    }
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: LoginPage(),
-  ));
 }

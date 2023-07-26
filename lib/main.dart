@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Add this import
 import 'package:henkel_daksh_project/admin_page.dart'; // Replace with the correct import path to your AdminPage
+import 'package:henkel_daksh_project/firebase_options.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   @override
