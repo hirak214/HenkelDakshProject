@@ -46,7 +46,7 @@ class _AdminPageState extends State<AdminPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Daksh Admin Panel'),
+        title: const Text('Daksh Admin Panel'),
         actions: [
           IconButton(
             icon: Icon(Icons.account_circle, color: Colors.black),
@@ -58,7 +58,10 @@ class _AdminPageState extends State<AdminPage> {
             },
           ),
           PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.black),
+            icon: const Icon(
+              Icons.account_circle,
+              color: Colors.black,
+            ),
             onSelected: (String result) {
               if (result == 'Logout') {
                 // Handle logout here
@@ -71,7 +74,7 @@ class _AdminPageState extends State<AdminPage> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
+              const PopupMenuItem<String>(
                 value: 'View Profile',
                 child: Row(
                   children: [
@@ -84,7 +87,7 @@ class _AdminPageState extends State<AdminPage> {
                   ],
                 ),
               ),
-              PopupMenuItem<String>(
+              const PopupMenuItem<String>(
                 value: 'Logout',
                 child: Row(
                   children: [
