@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -6,47 +8,43 @@ class TcsScreen extends StatefulWidget {
 }
 
 class _TcsScreenState extends State<TcsScreen> {
-  List<Map<String, dynamic>> users = [
-    {
-      'First Name': 'Hirak',
-      'Last Name': 'Desai',
-      'Email ID': 'hirak.d@henkel.com',
-      'Status': 'Active',
-    },
-    {
-      'First Name': 'Yashvi',
-      'Last Name': 'Agrawal',
-      'Email ID': 'yashvi.a@henkel.com',
-      'Status': 'Inactive',
-    },
-    // Add more user data as needed
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('TCS'),
       ),
-      body: Column(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'TCS User List',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: _buildTableColumns(),
-              rows: _buildTableRows(),
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('tcs_users').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Map<String, dynamic>> users = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+            return Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'TCS User List',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: _buildTableColumns(),
+                    rows: _buildTableRows(users),
+                  ),
+                ),
+              ],
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -61,19 +59,19 @@ class _TcsScreenState extends State<TcsScreen> {
     return [
       DataColumn(label: Text('First Name')),
       DataColumn(label: Text('Last Name')),
-      DataColumn(label: Text('Email ID')),
+      DataColumn(label: Text('Email-Id')),
       DataColumn(label: Text('Status')),
       DataColumn(label: Text('Action')),
     ];
   }
 
-  List<DataRow> _buildTableRows() {
+  List<DataRow> _buildTableRows(List<Map<String, dynamic>> users) {
     return users.map((user) {
       return DataRow(
         cells: [
-          DataCell(Text(user['First Name'] ?? '')),
-          DataCell(Text(user['Last Name'] ?? '')),
-          DataCell(Text(user['Email ID'] ?? '')),
+          DataCell(Text(user['first_name'] ?? '')),
+          DataCell(Text(user['last_name'] ?? '')),
+          DataCell(Text(user['email_id'] ?? '')),
           DataCell(Text(user['Status'] ?? '')),
           DataCell(
             Row(
@@ -93,7 +91,6 @@ class _TcsScreenState extends State<TcsScreen> {
               ],
             ),
           ),
-
         ],
       );
     }).toList();
@@ -122,11 +119,11 @@ class UserForm extends StatefulWidget {
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
   Map<String, dynamic> _userData = {
-    'First Name': '',
-    'Last Name': '',
-    'Email ID': '',
-    'Region': '',
-    'Reporting Manager Email ID': '',
+    'first_name': '',
+    'last_name': '',
+    'email_id': '',
+    'region': '',
+    'reporting_manager_email_id': '',
   };
 
   @override
@@ -164,7 +161,7 @@ class _UserFormState extends State<UserForm> {
 
   List<Widget> _buildFormFields() {
     return _userData.keys.map((key) {
-      if (key == 'Region' || key == 'Reporting Manager Email ID') {
+      if (key == 'region' || key == 'reporting_manager_email_id') {
         return TextFormField(
           decoration: InputDecoration(
             labelText: key,
@@ -179,10 +176,10 @@ class _UserFormState extends State<UserForm> {
           labelText: key,
         ),
         validator: (value) {
-          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
+          if (key == 'email_id' && !(value ?? '').endsWith('@henkel.com')) {
             return 'Please enter a valid email ID ending with @henkel.com';
           }
-          if (key != 'Region' && key != 'Reporting Manager Email ID') {
+          if (key != 'region' && key != 'reporting_manager_email_id') {
             if (value == null || value.isEmpty) {
               return 'Please enter the $key';
             }
@@ -196,18 +193,37 @@ class _UserFormState extends State<UserForm> {
     }).toList();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      // TODO: Implement code to upload form data to Firebase
+      try {
+        // Create a new user in Firebase Authentication with the default password
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _userData['email_id'],
+          password: '121212',
+        );
 
-      _formKey.currentState?.reset();
+        // Get the UID of the newly created user
+        String uid = userCredential.user?.uid ?? '';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Form submitted successfully')),
-      );
+        // Remove the 'email_id' field from the data, as it's not needed in Firestore
+        _userData.remove('email_id');
+
+        // Store the user details in Firestore using the UID as the document ID
+        await FirebaseFirestore.instance.collection('tcs_users').doc(uid).set(_userData);
+
+        // Reset the form and show a success message
+        _formKey.currentState?.reset();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User created successfully')),
+        );
+      } catch (e) {
+        // Show an error message if user creation fails
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create user. Please try again later.')),
+        );
+      }
     }
   }
 }
-
