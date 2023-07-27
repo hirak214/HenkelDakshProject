@@ -76,9 +76,22 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: AssetImage('assets/profile_picture_placeholder.png'), // Add your profile picture here
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage:
+                  AssetImage('assets/profile_picture_placeholder.png'), // Add your profile picture here
+                ),
+                Positioned(
+                  child: IconButton(
+                    onPressed: selectImage,
+                    icon: Icon(Icons.add_a_photo),
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 16),
             Row(
@@ -141,3 +154,4 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
+

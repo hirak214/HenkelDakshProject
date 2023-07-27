@@ -81,7 +81,7 @@ class _TcsScreenState extends State<TcsScreen> {
                 IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
-                    // TODO: Implement edit action
+                    _showEditUserDialog(user);
                   },
                 ),
                 IconButton(
@@ -112,9 +112,27 @@ class _TcsScreenState extends State<TcsScreen> {
       },
     );
   }
+
+  void _showEditUserDialog(Map<String, dynamic> userData) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: UserForm(userData: userData),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class UserForm extends StatefulWidget {
+  final Map<String, dynamic>? userData;
+
+  UserForm({this.userData});
+
   @override
   _UserFormState createState() => _UserFormState();
 }
@@ -131,6 +149,9 @@ class _UserFormState extends State<UserForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Remove the UID field from the form
+    _userData.remove('uid');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -148,7 +169,56 @@ class _UserFormState extends State<UserForm> {
         Form(
           key: _formKey,
           child: Column(
-            children: _buildFormFields(),
+            children: [
+              TextFormField(
+                initialValue: _userData['first_name'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'First Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the First Name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _userData['first_name'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['last_name'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Last Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the Last Name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _userData['last_name'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['region'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Region',
+                ),
+                onSaved: (value) {
+                  _userData['region'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['reporting_manager_email_id'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Reporting Manager Email ID',
+                ),
+                onSaved: (value) {
+                  _userData['reporting_manager_email_id'] = value ?? '';
+                },
+              ),
+            ],
           ),
         ),
         SizedBox(height: 16),
@@ -166,6 +236,7 @@ class _UserFormState extends State<UserForm> {
     return _userData.keys.map((key) {
       if (key == 'Region' || key == 'Reporting Manager Email ID') {
         return TextFormField(
+          initialValue: _userData[key] ?? '',
           decoration: InputDecoration(
             labelText: key,
           ),
@@ -175,6 +246,7 @@ class _UserFormState extends State<UserForm> {
         );
       }
       return TextFormField(
+        initialValue: _userData[key] ?? '',
         decoration: InputDecoration(
           labelText: key,
         ),
