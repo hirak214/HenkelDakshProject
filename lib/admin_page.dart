@@ -63,8 +63,8 @@ class _AdminPageState extends State<AdminPage> {
               } else if (result == 'View Profile') {
                 // Handle view profile here
                 Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
                 );
               }
             },

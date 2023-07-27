@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -6,47 +8,47 @@ class TcsScreen extends StatefulWidget {
 }
 
 class _TcsScreenState extends State<TcsScreen> {
-  List<Map<String, dynamic>> users = [
-    {
-      'First Name': 'Hirak',
-      'Last Name': 'Desai',
-      'Email ID': 'hirak.d@henkel.com',
-      'Status': 'Active',
-    },
-    {
-      'First Name': 'Yashvi',
-      'Last Name': 'Agrawal',
-      'Email ID': 'yashvi.a@henkel.com',
-      'Status': 'Inactive',
-    },
-    // Add more user data as needed
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('TCS'),
       ),
-      body: Column(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'TCS User List',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: _buildTableColumns(),
-              rows: _buildTableRows(),
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('tcs_users').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Map<String, dynamic>> users = snapshot.data!.docs.map((doc) {
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+              data['uid'] = doc.id; // Add the 'uid' field to the user data
+              return data;
+            }).toList();
+            return Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'TCS User List',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: _buildTableColumns(),
+                    rows: _buildTableRows(users),
+                  ),
+                ),
+              ],
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -61,19 +63,19 @@ class _TcsScreenState extends State<TcsScreen> {
     return [
       DataColumn(label: Text('First Name')),
       DataColumn(label: Text('Last Name')),
-      DataColumn(label: Text('Email ID')),
+      DataColumn(label: Text('Email-Id')),
       DataColumn(label: Text('Status')),
       DataColumn(label: Text('Action')),
     ];
   }
 
-  List<DataRow> _buildTableRows() {
+  List<DataRow> _buildTableRows(List<Map<String, dynamic>> users) {
     return users.map((user) {
       return DataRow(
         cells: [
-          DataCell(Text(user['First Name'] ?? '')),
-          DataCell(Text(user['Last Name'] ?? '')),
-          DataCell(Text(user['Email ID'] ?? '')),
+          DataCell(Text(user['first_name'] ?? '')),
+          DataCell(Text(user['last_name'] ?? '')),
+          DataCell(Text(user['email_id'] ?? '')),
           DataCell(Text(user['Status'] ?? '')),
           DataCell(
             Row(
@@ -81,7 +83,7 @@ class _TcsScreenState extends State<TcsScreen> {
                 IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
-                    _showEditUserDialog(user);
+                    _showEditUserDialog(user['uid'], user); // Pass the uid and userData
                   },
                 ),
                 IconButton(
@@ -93,7 +95,6 @@ class _TcsScreenState extends State<TcsScreen> {
               ],
             ),
           ),
-
         ],
       );
     }).toList();
@@ -113,14 +114,14 @@ class _TcsScreenState extends State<TcsScreen> {
     );
   }
 
-  void _showEditUserDialog(Map<String, dynamic> userData) {
+  void _showEditUserDialog(String? uid, Map<String, dynamic> userData) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: UserForm(userData: userData),
+            child: UserForm(uid: uid, userData: userData), // Pass the uid and userData
           ),
         );
       },
@@ -129,9 +130,10 @@ class _TcsScreenState extends State<TcsScreen> {
 }
 
 class UserForm extends StatefulWidget {
+  final String? uid; // Add the uid parameter
   final Map<String, dynamic>? userData;
 
-  UserForm({this.userData});
+  UserForm({this.uid, this.userData});
 
   @override
   _UserFormState createState() => _UserFormState();
@@ -139,13 +141,14 @@ class UserForm extends StatefulWidget {
 
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
-  Map<String, dynamic> _userData = {
-    'First Name': '',
-    'Last Name': '',
-    'Email ID': '',
-    'Region': '',
-    'Reporting Manager Email ID': '',
-  };
+  Map<String, dynamic> _userData = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize _userData with the provided user data or create an empty map
+    _userData = widget.userData ?? {};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +237,7 @@ class _UserFormState extends State<UserForm> {
 
   List<Widget> _buildFormFields() {
     return _userData.keys.map((key) {
-      if (key == 'Region' || key == 'Reporting Manager Email ID') {
+      if (key == 'region' || key == 'reporting_manager_email_id') {
         return TextFormField(
           initialValue: _userData[key] ?? '',
           decoration: InputDecoration(
@@ -251,10 +254,10 @@ class _UserFormState extends State<UserForm> {
           labelText: key,
         ),
         validator: (value) {
-          if (key == 'Email ID' && !(value ?? '').endsWith('@henkel.com')) {
+          if (key == 'email_id' && !(value ?? '').endsWith('@henkel.com')) {
             return 'Please enter a valid email ID ending with @henkel.com';
           }
-          if (key != 'Region' && key != 'Reporting Manager Email ID') {
+          if (key != 'region' && key != 'reporting_manager_email_id') {
             if (value == null || value.isEmpty) {
               return 'Please enter the $key';
             }
@@ -268,18 +271,32 @@ class _UserFormState extends State<UserForm> {
     }).toList();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      // TODO: Implement code to upload form data to Firebase
+      // Check if the user data contains a valid 'uid' (indicating an existing user)
+      String uid = widget.uid ?? '';
+      _userData['uid'] = uid; // Make sure the uid is set in the _userData map
 
+      if (uid.isNotEmpty) {
+        // Update the user details in Firestore using the UID as the document ID
+        await FirebaseFirestore.instance.collection('tcs_users').doc(uid).update(_userData);
+      } else {
+        // If the 'uid' field is empty, it means we are adding a new user.
+        // We should remove the 'uid' field from the user data before adding it to Firestore.
+        _userData.remove('uid');
+
+        // Add a new user to Firestore
+        await FirebaseFirestore.instance.collection('tcs_users').add(_userData);
+      }
+
+      // Reset the form and show a success message
       _formKey.currentState?.reset();
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Form submitted successfully')),
+        SnackBar(content: Text('User details updated successfully')),
       );
+      Navigator.of(context).pop(); // Close the dialog after saving the changes
     }
   }
 }
-

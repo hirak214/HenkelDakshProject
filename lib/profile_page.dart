@@ -8,6 +8,12 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+
+  void selectImage() {
+
+  }
+
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _firstNameController = TextEditingController();
@@ -154,4 +160,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
