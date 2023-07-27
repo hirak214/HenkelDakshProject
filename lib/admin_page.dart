@@ -104,65 +104,62 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'App Drawer',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
+      body: Row(
+        children: [
+      // Drawer
+          Drawer(
+          child: Container(
+          color: Colors.white,
+            child: ListView(
+              padding: EdgeInsets.only(top: 25.0),
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.arrow_drop_down_circle),
+                  title: DropdownButton<String>(
+                    value: _selectedOption,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedOption = newValue;
+                      });
+                    },
+                    hint: const Text('User Management'),
+                    items: const <String>[
+                      'TCS',
+                      'Customer Manager',
+                      'Applicator',
+                    ].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
+                // ListTile(
+                //   leading: const Icon(Icons.pageview),
+                //   title: const Text('User List'),
+                //   onTap: () {
+                //     // Handle User List tap
+                //   },
+                // ),
+                ListTile(
+                  leading: const Icon(Icons.upload_file_sharp),
+                  title: const Text('Upload Study Material'),
+                  onTap: () {
+                    // Handle Upload Study Material tap
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UploadScreen()),
+                    );
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.pageview),
-              title: DropdownButton<String>(
-                value: _selectedOption,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedOption = newValue;
-                  });
-                },
-                hint: const Text('User Management'),
-                items: const <String>[
-                  'TCS',
-                  'Customer Manager',
-                  'Applicator',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-            ),
-            // ListTile(
-            //   leading: const Icon(Icons.pageview),
-            //   title: const Text('User List'),
-            //   onTap: () {
-            //     // Handle User List tap
-            //   },
-            // ),
-            ListTile(
-              leading: const Icon(Icons.pageview),
-              title: const Text('Upload Study Material'),
-              onTap: () {
-                // Handle Upload Study Material tap
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UploadScreen()),
-                );
-              },
-            ),
-          ],
+          ),
         ),
-      ),
-      body: view,
+    ],
+      // key: view,
+    ),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:henkel_daksh_project/login_page.dart';
 import 'package:henkel_daksh_project/profile_page.dart';
 import 'package:henkel_daksh_project/app_drawer/user_management/tsc_screen.dart';
+import 'package:henkel_daksh_project/test.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(), // Set the AdminPage as the initial page
+      home: AdminPage(), // Set the AdminPage as the initial page
     );
   }
 }
