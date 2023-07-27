@@ -48,15 +48,6 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: const Text('Daksh Admin Panel'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.account_circle, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-            },
-          ),
           PopupMenuButton<String>(
             icon: const Icon(
               Icons.account_circle,
@@ -71,6 +62,10 @@ class _AdminPageState extends State<AdminPage> {
                 );
               } else if (result == 'View Profile') {
                 // Handle view profile here
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
