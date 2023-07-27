@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -155,6 +155,9 @@ class _UserFormState extends State<UserForm> {
     // Remove the UID field from the form
     _userData.remove('uid');
 
+    // Check if we are in "edit" mode (updating an existing user) or "create" mode (adding a new user)
+    bool isEditMode = widget.uid != null && widget.uid!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -203,6 +206,25 @@ class _UserFormState extends State<UserForm> {
                   _userData['last_name'] = value ?? '';
                 },
               ),
+              if (!isEditMode) // Show the email ID field only in "create" mode
+                TextFormField(
+                  initialValue: _userData['email_id'] ?? '',
+                  decoration: InputDecoration(
+                    labelText: 'Email-Id',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the Email-Id';
+                    }
+                    if (!value.endsWith('@henkel.com')) {
+                      return 'Please enter a valid email ID ending with @henkel.com';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _userData['email_id'] = value ?? '';
+                  },
+                ),
               TextFormField(
                 initialValue: _userData['region'] ?? '',
                 decoration: InputDecoration(
@@ -235,41 +257,6 @@ class _UserFormState extends State<UserForm> {
     );
   }
 
-  List<Widget> _buildFormFields() {
-    return _userData.keys.map((key) {
-      if (key == 'region' || key == 'reporting_manager_email_id') {
-        return TextFormField(
-          initialValue: _userData[key] ?? '',
-          decoration: InputDecoration(
-            labelText: key,
-          ),
-          onSaved: (value) {
-            _userData[key] = value ?? '';
-          },
-        );
-      }
-      return TextFormField(
-        initialValue: _userData[key] ?? '',
-        decoration: InputDecoration(
-          labelText: key,
-        ),
-        validator: (value) {
-          if (key == 'email_id' && !(value ?? '').endsWith('@henkel.com')) {
-            return 'Please enter a valid email ID ending with @henkel.com';
-          }
-          if (key != 'region' && key != 'reporting_manager_email_id') {
-            if (value == null || value.isEmpty) {
-              return 'Please enter the $key';
-            }
-          }
-          return null;
-        },
-        onSaved: (value) {
-          _userData[key] = value ?? '';
-        },
-      );
-    }).toList();
-  }
 
   void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -281,22 +268,59 @@ class _UserFormState extends State<UserForm> {
 
       if (uid.isNotEmpty) {
         // Update the user details in Firestore using the UID as the document ID
-        await FirebaseFirestore.instance.collection('tcs_users').doc(uid).update(_userData);
+        await FirebaseFirestore.instance.collection('tcs_users')
+            .doc(uid)
+            .update(_userData);
+
+        //  Reset the form and show a success message
+        _formKey.currentState?.reset();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User details updated succesfully')),
+        );
+        Navigator.of(context)
+            .pop(); // Close the dialog after saving the changes
       } else {
         // If the 'uid' field is empty, it means we are adding a new user.
         // We should remove the 'uid' field from the user data before adding it to Firestore.
         _userData.remove('uid');
 
-        // Add a new user to Firestore
-        await FirebaseFirestore.instance.collection('tcs_users').add(_userData);
-      }
+        // Create a new user in Firebase Authentication with the default password '121212'
+        // Create a new user in Firebase Authentication with the default password '121212'
+        try {
+          UserCredential userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(
+            email: _userData['email_id'] ?? '', // Use the email_id as the email
+            password: '121212',
+          );
 
-      // Reset the form and show a success message
-      _formKey.currentState?.reset();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User details updated successfully')),
-      );
-      Navigator.of(context).pop(); // Close the dialog after saving the changes
+          // Use the generated UID to store the rest of the data in the 'tcs_users' collection
+          uid = userCredential.user?.uid ?? '';
+          _userData.remove('email_id');
+
+          // Add the user data to Firestore
+          await FirebaseFirestore.instance.collection('tcs_users').doc(uid).set(
+              _userData);
+
+          // Reset the form and show a success message
+          _formKey.currentState?.reset();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('New user created successfully')),
+          );
+          Navigator.of(context)
+              .pop(); // Close the dialog after saving the changes
+        } on FirebaseAuthException catch (e) {
+          // Handle errors related to Firebase Authentication
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating a new user: ${e.message}')),
+          );
+        } catch (e) {
+          // Handle other errors
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating a new user: $e')),
+          );
+        }
+      }
     }
   }
 }
+
