@@ -76,7 +76,7 @@ class _TcsScreenState extends State<TcsScreen> {
           DataCell(Text(user['first_name'] ?? '')),
           DataCell(Text(user['last_name'] ?? '')),
           DataCell(Text(user['email_id'] ?? '')),
-          DataCell(Text(user['Status'] ?? '')),
+          DataCell(Text(user['status'] ?? '')),
           DataCell(
             Row(
               children: [
@@ -217,7 +217,7 @@ class _UserFormState extends State<UserForm> {
                       return 'Please enter the Email-Id';
                     }
                     if (!value.endsWith('@henkel.com')) {
-                      return 'Please enter a valid email ID ending with @henkel.com';
+                      return 'Please enter a valid Email-Id ending with @henkel.com';
                     }
                     return null;
                   },
@@ -285,7 +285,6 @@ class _UserFormState extends State<UserForm> {
         _userData.remove('uid');
 
         // Create a new user in Firebase Authentication with the default password '121212'
-        // Create a new user in Firebase Authentication with the default password '121212'
         try {
           UserCredential userCredential = await FirebaseAuth.instance
               .createUserWithEmailAndPassword(
@@ -296,6 +295,9 @@ class _UserFormState extends State<UserForm> {
           // Use the generated UID to store the rest of the data in the 'tcs_users' collection
           uid = userCredential.user?.uid ?? '';
           _userData.remove('email_id');
+
+          // trying to set stauts
+          // _userData['status'] = 'Active' ?? '';
 
           // Add the user data to Firestore
           await FirebaseFirestore.instance.collection('tcs_users').doc(uid).set(
