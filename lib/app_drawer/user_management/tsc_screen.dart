@@ -18,7 +18,11 @@ class _TcsScreenState extends State<TcsScreen> {
         stream: FirebaseFirestore.instance.collection('tcs_users').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            List<Map<String, dynamic>> users = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+            List<Map<String, dynamic>> users = snapshot.data!.docs.map((doc) {
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+              data['uid'] = doc.id; // Add the 'uid' field to the user data
+              return data;
+            }).toList();
             return Column(
               children: [
                 Center(
@@ -79,7 +83,7 @@ class _TcsScreenState extends State<TcsScreen> {
                 IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
-                    // TODO: Implement edit action
+                    _showEditUserDialog(user);
                   },
                 ),
                 IconButton(
@@ -109,25 +113,47 @@ class _TcsScreenState extends State<TcsScreen> {
       },
     );
   }
+
+  void _showEditUserDialog(Map<String, dynamic> userData) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: UserForm(userData: userData),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class UserForm extends StatefulWidget {
+  final Map<String, dynamic>? userData;
+
+  UserForm({this.userData});
+
   @override
   _UserFormState createState() => _UserFormState();
 }
 
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
-  Map<String, dynamic> _userData = {
-    'first_name': '',
-    'last_name': '',
-    'email_id': '',
-    'region': '',
-    'reporting_manager_email_id': '',
-  };
+  Map<String, dynamic> _userData = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize _userData with the provided user data or create an empty map
+    _userData = widget.userData ?? {};
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Remove the UID field from the form
+    _userData.remove('uid');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -145,7 +171,56 @@ class _UserFormState extends State<UserForm> {
         Form(
           key: _formKey,
           child: Column(
-            children: _buildFormFields(),
+            children: [
+              TextFormField(
+                initialValue: _userData['first_name'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'First Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the First Name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _userData['first_name'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['last_name'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Last Name',
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the Last Name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _userData['last_name'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['region'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Region',
+                ),
+                onSaved: (value) {
+                  _userData['region'] = value ?? '';
+                },
+              ),
+              TextFormField(
+                initialValue: _userData['reporting_manager_email_id'] ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Reporting Manager Email ID',
+                ),
+                onSaved: (value) {
+                  _userData['reporting_manager_email_id'] = value ?? '';
+                },
+              ),
+            ],
           ),
         ),
         SizedBox(height: 16),
@@ -163,6 +238,7 @@ class _UserFormState extends State<UserForm> {
     return _userData.keys.map((key) {
       if (key == 'region' || key == 'reporting_manager_email_id') {
         return TextFormField(
+          initialValue: _userData[key] ?? '',
           decoration: InputDecoration(
             labelText: key,
           ),
@@ -172,6 +248,7 @@ class _UserFormState extends State<UserForm> {
         );
       }
       return TextFormField(
+        initialValue: _userData[key] ?? '',
         decoration: InputDecoration(
           labelText: key,
         ),
@@ -197,33 +274,16 @@ class _UserFormState extends State<UserForm> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      try {
-        // Create a new user in Firebase Authentication with the default password
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _userData['email_id'],
-          password: '121212',
-        );
+      // Update the user details in Firestore using the UID as the document ID
+      String uid = _userData['uid'] ?? ''; // UID should be provided in the user data if editing an existing user
+      await FirebaseFirestore.instance.collection('tcs_users').doc(uid).update(_userData);
 
-        // Get the UID of the newly created user
-        String uid = userCredential.user?.uid ?? '';
-
-        // Remove the 'email_id' field from the data, as it's not needed in Firestore
-        _userData.remove('email_id');
-
-        // Store the user details in Firestore using the UID as the document ID
-        await FirebaseFirestore.instance.collection('tcs_users').doc(uid).set(_userData);
-
-        // Reset the form and show a success message
-        _formKey.currentState?.reset();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User created successfully')),
-        );
-      } catch (e) {
-        // Show an error message if user creation fails
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create user. Please try again later.')),
-        );
-      }
+      // Reset the form and show a success message
+      _formKey.currentState?.reset();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User details updated successfully')),
+      );
+      Navigator.of(context).pop(); // Close the dialog after saving the changes
     }
   }
 }
