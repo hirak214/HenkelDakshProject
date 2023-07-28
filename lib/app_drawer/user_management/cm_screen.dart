@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:henkel_daksh_project/authenticate.dart';
 
 class CustomerManagerScreen extends StatefulWidget {
   @override
@@ -92,7 +93,7 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
                 IconButton(
                   icon: Icon(Icons.cancel_rounded),
                   onPressed: () {
-                    // TODO: Implement delete action
+                    _showAuthenticateDialog(); // Call the authentication dialog
                   },
                 ),
               ],
@@ -114,6 +115,17 @@ class _CustomerManagerScreenState extends State<CustomerManagerScreen> {
             child: CustomerForm(),
           ),
         );
+      },
+    );
+  }
+
+
+  // Function to show the authentication dialog
+  void _showAuthenticateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AuthenticateDialog();
       },
     );
   }

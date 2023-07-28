@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:henkel_daksh_project/authenticate.dart';
 
 class TcsScreen extends StatefulWidget {
   @override
@@ -89,7 +90,7 @@ class _TcsScreenState extends State<TcsScreen> {
                 IconButton(
                   icon: Icon(Icons.cancel_rounded),
                   onPressed: () {
-                    // TODO: Implement delete action
+                    _showAuthenticateDialog(); // Call the authentication dialog
                   },
                 ),
               ],
@@ -114,6 +115,16 @@ class _TcsScreenState extends State<TcsScreen> {
     );
   }
 
+  // Function to show the authentication dialog
+  void _showAuthenticateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AuthenticateDialog();
+      },
+    );
+  }
+
   void _showEditUserDialog(String? uid, Map<String, dynamic> userData) {
     showDialog(
       context: context,
@@ -128,6 +139,7 @@ class _TcsScreenState extends State<TcsScreen> {
     );
   }
 }
+
 
 class UserForm extends StatefulWidget {
   final String? uid; // Add the uid parameter
