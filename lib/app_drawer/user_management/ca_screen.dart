@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:henkel_daksh_project/authenticate.dart';
 
 class CustomerApplicatorScreen extends StatefulWidget {
   @override
@@ -7,53 +10,52 @@ class CustomerApplicatorScreen extends StatefulWidget {
 }
 
 class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
-  List<Map<String, String>> applicators = [
-    {
-      'First Name': 'Hirak',
-      'Last Name': 'Desai',
-      'Email ID': 'hirak.d@mail.com',
-      'Customer Name': 'ABC Company',
-      'Status': 'Active',
-    },
-    {
-      'First Name': 'Yashvi',
-      'Last Name': 'Agrawal',
-      'Email ID': 'yashvi.a@mail.com',
-      'Customer Name': 'XYZ Corporation',
-      'Status': 'Inactive',
-    },
-    // Add more applicator data as needed
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Customer Applicator'),
       ),
-      body: Column(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Customer Applicator User List',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: _buildTableColumns(),
-              rows: _buildTableRows(),
-            ),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('ca_users').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Map<String, dynamic>> customers = snapshot.data!.docs.map((doc) {
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+              data['uid'] = doc.id; // Add the 'uid' field to the user data
+              return data;
+            }).toList();
+            return Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Customer Applicators User List',
+                      style: TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: _buildTableColumns(),
+                    rows: _buildTableRows(customers),
+                  ),
+                ),
+              ],
+            );
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showAddApplicatorDialog();
+          _showAddCustomerDialog();
         },
         child: Icon(Icons.add),
       ),
@@ -64,35 +66,35 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
     return [
       DataColumn(label: Text('First Name')),
       DataColumn(label: Text('Last Name')),
-      DataColumn(label: Text('Email ID')),
-      DataColumn(label: Text('Customer Name')),
+      DataColumn(label: Text('Customer Manager')),
       DataColumn(label: Text('Status')),
       DataColumn(label: Text('Action')),
     ];
   }
 
-  List<DataRow> _buildTableRows() {
-    return applicators.map((applicator) {
+  List<DataRow> _buildTableRows(List<Map<String, dynamic>> customers) {
+    return customers.map((customer) {
       return DataRow(
         cells: [
-          DataCell(Text(applicator['First Name'] ?? '')),
-          DataCell(Text(applicator['Last Name'] ?? '')),
-          DataCell(Text(applicator['Email ID'] ?? '')),
-          DataCell(Text(applicator['Customer Name'] ?? '')),
-          DataCell(Text(applicator['Status'] ?? '')),
+          DataCell(Text(customer['first_name'] ?? '')),
+          DataCell(Text(customer['last_name'] ?? '')),
+          DataCell(Text(customer['customer_manager'] ?? '')),
+          DataCell(Text(customer['status'] ?? '')),
           DataCell(
             Row(
               children: [
                 IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
-                    // TODO: Implement edit action
+                    _showEditUserDialog(
+                        customer['uid'], customer); // Pass the uid and userData
+
                   },
                 ),
                 IconButton(
                   icon: Icon(Icons.cancel_rounded),
                   onPressed: () {
-                    // TODO: Implement delete action
+                    _showAuthenticateDialog(); // Call the authentication dialog
                   },
                 ),
               ],
@@ -104,37 +106,84 @@ class _CustomerApplicatorScreenState extends State<CustomerApplicatorScreen> {
     }).toList();
   }
 
-  void _showAddApplicatorDialog() {
+  void _showAddCustomerDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ApplicatorForm(),
+            child: CustomerForm(),
+          ),
+        );
+      },
+    );
+  }
+
+
+  // Function to show the authentication dialog
+  void _showAuthenticateDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AuthenticateDialog();
+      },
+    );
+  }
+
+
+  void _showEditUserDialog(String? uid, Map<String, dynamic> customerData) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: CustomerForm(uid: uid, customerData: customerData), // Pass the uid and userData
           ),
         );
       },
     );
   }
 }
+class CustomerForm extends StatefulWidget {
+  final String? uid; // Add the uid parameter
+  final Map<String, dynamic>? customerData;
 
-class ApplicatorForm extends StatefulWidget {
+  CustomerForm({this.uid, this.customerData});
+
   @override
-  _ApplicatorFormState createState() => _ApplicatorFormState();
+  _CustomerFormState createState() => _CustomerFormState();
 }
 
-class _ApplicatorFormState extends State<ApplicatorForm> {
+class _CustomerFormState extends State<CustomerForm> {
   final _formKey = GlobalKey<FormState>();
-  Map<String, dynamic> _applicatorData = {
-    'First Name': '',
-    'Last Name': '',
-    'Email ID': '',
-    'Customer Name': '',
-  };
+  Map<String, dynamic> _customerData = {};
+
+  // Map<String, dynamic> _customerData = {
+  //   'First Name': '',
+  //   'Last Name': '',
+  //   'Email ID': '',
+  //   'Customer ID': '',
+  //   'Customer Address': '',
+  //   'Department': '',
+  // };
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialise _customerData with the provided user data or create an empty map
+    _customerData = widget.customerData ?? {};
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Remove the UID field from the form
+    _customerData.remove('uid');
+
+    // Check if we are in "edit" mode (updating an existing user) or "create" mode (adding a new user)
+    bool isEditMode = widget.uid != null && widget.uid!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -152,7 +201,69 @@ class _ApplicatorFormState extends State<ApplicatorForm> {
         Form(
           key: _formKey,
           child: Column(
-            children: _buildFormFields(),
+              children:[
+                TextFormField(
+                  initialValue: _customerData['first_name'] ?? '',
+                  decoration: InputDecoration(
+                    labelText: 'First Name',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the First Name';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _customerData['first_name'] = value ?? '';
+                  },
+                ),
+                TextFormField(
+                  initialValue: _customerData['last_name'] ?? '',
+                  decoration: InputDecoration(
+                    labelText: 'Last Name',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the Last Name';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _customerData['last_name'] = value ?? '';
+                  },
+                ),
+                if (!isEditMode) // show the email ID field only in "create" mode
+                  TextFormField(
+                    initialValue: _customerData['email_id'] ?? '',
+                    decoration: InputDecoration(
+                      labelText: 'Email-Id',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a valid Email-Id';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _customerData['email_id'] = value ?? '';
+                    },
+                  ),
+                TextFormField(
+                  initialValue: _customerData['customer_manager'] ?? '',
+                  decoration: InputDecoration(
+                    labelText: 'Customer Manager',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the Customer Manager name';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _customerData['customer_manager'] = value ?? '';
+                  },
+                ),
+              ]
           ),
         ),
         SizedBox(height: 16),
@@ -166,37 +277,66 @@ class _ApplicatorFormState extends State<ApplicatorForm> {
     );
   }
 
-  List<Widget> _buildFormFields() {
-    return _applicatorData.keys.map((key) {
-      return TextFormField(
-        decoration: InputDecoration(
-          labelText: key,
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter the $key';
-          }
-          return null;
-        },
-        onSaved: (value) {
-          _applicatorData[key] = value ?? '';
-        },
-      );
-    }).toList();
-  }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      // TODO: Implement code to upload form data to Firebase
+      // Check if the user data contains a valid 'uid' (indicationg an existing customer)
+      String uid = widget.uid ?? '';
+      _customerData['uid'] = uid; // Make sure the uid is set in the _customerData map
 
-      _formKey.currentState?.reset();
+      if (uid.isNotEmpty) {
+        // Update the user details in Firestore using the UID as the document ID
+        await FirebaseFirestore.instance.collection('cm_users').doc(uid).update(_customerData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Form submitted successfully')),
-      );
+        // Reset the form and show a success message
+        _formKey.currentState?.reset();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User details updated succesfully')),);
+        Navigator.of(context).pop();
+      } else {
+        // If the 'uid' field is empty, it means we are adding a new customer.
+        // We should remove the 'uid' field from the customer data before adding it to FireStore.
+        _customerData.remove('uid');
+
+        // Create a new user in Firebase Authentication with the default password '121212'
+        try {
+          UserCredential userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(
+            email: _customerData['email_id'] ?? '', // Use the email_id as the email
+            password: '121212',
+          );
+
+          // Use the generated UID to store the rest of the data in the 'cm_users' collection
+          uid = userCredential.user?.uid ?? '';
+          _customerData.remove('email_id');
+
+          // trying to set stauts
+          // _userData['status'] = 'Active' ?? '';
+
+          // Add the user data to Firestore
+          await FirebaseFirestore.instance.collection('ca_users').doc(uid).set(
+              _customerData);
+
+          // Reset the form and show a success message
+          _formKey.currentState?.reset();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('New customer created successfully')),
+          );
+          Navigator.of(context)
+              .pop(); // Close the dialog after saving the changes
+        } on FirebaseAuthException catch (e) {
+          // Handle errors related to Firebase Authentication
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating a new customer: ${e.message}')),
+          );
+        } catch (e) {
+          // Handle other errors
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error creating a new customer: $e')),
+          );
+        }
+      }
     }
   }
 }
-
