@@ -1,5 +1,9 @@
+import 'dart:html';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:henkel_daksh_project/admin_page.dart'; // Replace with the correct import path to your AdminPage
 
 class LoginPage extends StatefulWidget {
@@ -11,7 +15,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
   String? _errorMessage;
 
   @override
@@ -42,6 +45,9 @@ class _LoginPageState extends State<LoginPage> {
                   }
                   return null;
                 },
+                onFieldSubmitted: (_) {
+                  _submitForm();
+                },
               ),
               SizedBox(height: 16),
               TextFormField(
@@ -55,6 +61,9 @@ class _LoginPageState extends State<LoginPage> {
                     return 'Please enter your password';
                   }
                   return null;
+                },
+                onFieldSubmitted: (_){
+                  _submitForm();
                 },
               ),
               if (_errorMessage != null) ...[
@@ -85,16 +94,29 @@ class _LoginPageState extends State<LoginPage> {
       String password = _passwordController.text;
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
           email: email,
           password: password,
         );
 
-        // Login successful, navigate to the AdminPage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminPage()),
-        );
+        // Check if the user is an admin (exists in the admin_users collection)
+        DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
+            .collection('admin_users').doc(userCredential.user?.uid).get();
+        bool isAdmin = adminSnapshot.exists;
+
+        if (isAdmin) {
+          // Login successful and user is an admin, navigate to the AdminPage
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminPage()),
+          );
+    } else {
+          // User is not an admin, show error message
+          setState(() {
+            _errorMessage = "You do not have permission to access this page.";
+          });
+        }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found') {
           setState(() {
