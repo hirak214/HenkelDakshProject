@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:henkel_daksh_project/admin_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:mime/mime.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -8,9 +12,40 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  File? _imageFile;
+  final picker = ImagePicker();
 
-  void selectImage() {
+  void _selectImage() async {
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
+  // Function to check if the file has an allowed extension (png, jpg, jpeg)
+  bool _isAllowedImage(File file) {
+    final mimeType = lookupMimeType(file.path);
+    if (mimeType != null && (mimeType.startsWith('image/jpeg') || mimeType.startsWith('image/png'))) {
+      return true;
+    }
+    return false;
+  }
+
+  // Display the image in the CircleAvatar if it's allowed
+  Widget _buildProfileImage() {
+    if (_imageFile != null && _isAllowedImage(_imageFile!)) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundImage: FileImage(_imageFile!),
+      );
+    } else {
+      return CircleAvatar(
+        radius: 50,
+        backgroundImage: AssetImage('assets/profile_picture_placeholder.png'),
+      );
+    }
   }
 
 
@@ -72,6 +107,15 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile Page'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminPage()),
+            );
+          },
+        ),
       ),
       body: _isLoading
           ? Center(
@@ -92,7 +136,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 Positioned(
                   child: IconButton(
-                    onPressed: selectImage,
+                    onPressed: _selectImage,
                     icon: Icon(Icons.add_a_photo),
                     color: Colors.white,
                   ),
