@@ -4,15 +4,17 @@ import 'package:henkel_daksh_project/admin_page.dart'; // Replace with the corre
 import 'package:henkel_daksh_project/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:henkel_daksh_project/login_page.dart';
-import 'package:henkel_daksh_project/profile_page.dart';
-import 'package:henkel_daksh_project/app_drawer/user_management/tsc_screen.dart';
-import 'package:henkel_daksh_project/test.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  //trying to make sure that on refreshing user is not logged out
+  // await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+
   runApp(MyApp());
 }
 
